@@ -1,0 +1,97 @@
+<apex:page showHeader="false" docType="html-5.0" controller="DemoS1Controller">
+<!-- for use with Salesforce1, change showHeader above to false and include the resource bundles below -->
+
+	<!-- 
+	DemoS1Page
+	This page is intended to use the onestarter ui styling to appear part of the Salesforce1
+	app UI. It only uses standard buttons and visualforce remoting currently. 
+	
+	This is intended to be a simple example, but have just enough complexity to justify
+	using the remote method invocation. 
+	
+	See DemoS1ActionPage to see examples of use of the publisher action. 
+	 -->
+
+    <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'icons.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'styles.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'OneStarter.css')}"/>
+
+    <!-- JavaScript files -->
+    <apex:includeScript value="{!URLFOR($Resource.jquery_1_10_2)}"/>
+    <apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/>
+
+ 	<!-- inserting jquery cdn link -->
+     
+    <script>
+		
+	
+    $(document).ready(function() {
+       	s1 = $('div#one-app').oneStarter('app');
+    });
+    
+    function doSave(){
+        console.log('started save');
+        var acctObj = 
+        {
+            "Name" : $('#in-name').val()
+        }
+            
+        var ctObj = 
+        {
+            "FirstName" : $('#in-first').val(),
+            "LastName" : $('#in-last').val()
+        }            
+        console.log(JSON.stringify(acctObj)+JSON.stringify(ctObj));
+        DemoS1Controller.createRecords(acctObj,ctObj,function(result,event){
+            console.log('in callback');
+            $('#show-result').text('Created Account' + JSON.stringify(result) + JSON.stringify(event));
+            
+            if (event.status) {
+            	//perform success actions here
+            	//navigate to account record
+				if( (typeof sforce != 'undefined') && (sforce != null) ) {
+				    // Salesforce1 navigation
+				    sforce.one.navigateToSObject(result);
+				}
+				else {
+				    // Set the window's URL using a Visualforce expression
+				    window.location.href = '/' + result;
+				        //'curly-bangURLFOR(dollarAction.Account.View, account.Id)close-curly';
+				}
+            } else {
+            	//perform failure actions here
+            
+            }
+            
+            });
+
+    }
+
+    </script>
+    
+    <div id="one-app">
+	<h1>Create Account and Contact</h1>
+	<article class="padded">
+		This is a sample page using Josh's onestarter package.
+	</article>
+
+        <div id="form-example">
+            <h2>Add a Customer</h2>
+            <button onclick="javascript:doSave()">Save</button>
+            <section>
+                <label class="field-label">{!$ObjectType.Account.fields.Name.label}</label>
+                <input class="field-entry" id="in-name" type="text" />
+            </section>
+            <section>
+                <label class="field-label">{!$ObjectType.Contact.fields.FirstName.label}</label>
+                <input class="field-entry" id="in-first" type="text" />
+            </section>
+            <section>
+                <label class="field-label">{!$ObjectType.Contact.fields.LastName.label}</label>
+                <input class="field-entry" id="in-last" type="text" />
+            </section>
+        </div>
+        <div id="show-result"></div>
+    </div>
+</apex:page>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Sample Tab for display of Account and Contact page.</description>
+    <label>Account+Contact</label>
+    <mobileReady>false</mobileReady>
+    <motif>Custom74: Hot Air Balloon</motif>
+    <page>DemoS1Page</page>
+</CustomTab>

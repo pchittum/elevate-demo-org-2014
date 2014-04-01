@@ -1,0 +1,108 @@
+<apex:page showHeader="false" docType="html-5.0" controller="DemoS1Controller">
+    <!-- 
+    DemoS1ActionPage
+    This page is intended to use the onestarter ui styling to appear part of the Salesforce1
+    app UI, and include a simple use case for using the publisher API. It gives examples of: 
+    - Activating the submit button
+    - Deactivating the submit button
+    - Subscribing an action to the publisher event
+    - Making the publisher close on submit
+    
+    Like the DemoS1Page Visualforce page, it also uses the onestarter libs by Josh Birk for UI
+    and makes use of Apex remote action methods for interaction with the data model.  
+     -->
+    <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'icons.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'styles.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'OneStarter.css')}"/>
+    
+    <!-- JavaScript files -->
+    <apex:includeScript value="{!URLFOR($Resource.jquery_1_10_2)}"/>
+    <apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/>
+    <apex:includeScript value="/canvas/sdk/js/publisher.js"/>  
+    <script>
+    /*
+        
+    */
+    $(document).ready(function() {
+        
+        s1 = $('div#one-app').oneStarter('app');
+        
+        $(".field-entry").keyup(function(){
+            console.log('exec on change function');
+            var cname = $('#in-name').val();
+            var fname = $('#in-first').val();
+            var lname = $('#in-last').val();
+            
+            if ((cname || cname !== '') && (fname || fname !== '') && (lname || lname !== '')){
+                Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:true});
+            } else {
+                Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:false});
+            }
+            
+        });
+        
+    });
+    
+    function doSave(){
+        console.log('started save');
+        var acctObj = 
+        {
+            "Name" : $('#in-name').val()
+        }
+            
+        var ctObj = 
+        {
+            "FirstName" : $('#in-first').val(),
+            "LastName" : $('#in-last').val()
+        }            
+        console.log(JSON.stringify(acctObj)+JSON.stringify(ctObj));
+        DemoS1Controller.createRecords(acctObj,ctObj,function(result,event){
+            console.log('in callback');
+            $('#show-result').text('Created Account' + JSON.stringify(result) + JSON.stringify(event));
+            Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}}); 
+            });
+
+    }
+    
+    Sfdc.canvas.publisher.subscribe({name: "publisher.post", onData:function(e) {
+        // This subscribe fires when the user hits 'Submit' in the publisher
+        doSave();
+    }}); 
+    
+    /** Currently investigating if there is a way to subscribe to the cancel event of publisher
+    * this does not work, but researching and asking around. 
+    Sfdc.canvas.publisher.subscribe({name: "publisher.cancel", onData:function(e) {
+        
+    }}); 
+    */
+    
+    </script>
+    
+    <div id="one-app">
+    <h1>Create Account and Contact</h1>
+    <article class="padded">
+        This is a sample page using Josh's onestarter package.
+    </article>
+
+        <div id="form-example">
+            <h2>Add a Customer</h2>
+            <!-- removing  
+            <button onclick="javascript:doSave()">Save</button>
+            -->
+            <section>
+                <label class="field-label">Company Name</label>
+                <input class="field-entry" id="in-name" type="text" />
+            </section>
+            <section>
+                <label class="field-label">First Name</label>
+                <input class="field-entry" id="in-first" type="text" />
+            </section>
+            <section>
+                <label class="field-label">Last Name</label>
+                <input class="field-entry" id="in-last" type="text" />
+            </section>
+        </div>
+        <div id="show-result"></div>
+    </div>
+</apex:page>

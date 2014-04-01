@@ -1,0 +1,8 @@
+<apex:page standardController="Account" >
+    <apex:form >
+        <apex:inputField value="{!Account.Name}"/>
+        <apex:commandButton action="{!quicksave}" value="Save"/>
+    </apex:form>
+    <apex:outputText >{!Account.Name}</apex:outputText>
+    <apex:outputText >{!Account.Id}</apex:outputText>
+</apex:page>
