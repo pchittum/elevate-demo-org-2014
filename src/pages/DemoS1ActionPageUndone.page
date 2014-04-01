@@ -10,23 +10,26 @@
     
     Like the DemoS1Page Visualforce page, it also uses the onestarter libs by Josh Birk for UI
     and makes use of Apex remote action methods for interaction with the data model.  
+    
+    Again, if you have added the onestarter static resources you can uncomment the stylesheet and scripts below. 
      -->
     <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'icons.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'styles.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'OneStarter.css')}"/>
     
     <!-- JavaScript files -->
-    <apex:includeScript value="{!URLFOR($Resource.jquery_1_10_2)}"/>
-    <apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>
-    <apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<!-- <apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>  -->    
+<!-- <apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/> -->    
     <apex:includeScript value="/canvas/sdk/js/publisher.js"/>  
     <script>
     /*
         
     */
     $(document).ready(function() {
-        
-        s1 = $('div#one-app').oneStarter('app');
+    
+        // uncomment if using onestarter
+        //s1 = $('div#one-app').oneStarter('app');
         
         $(".field-entry").keyup(function(){
             console.log('exec on change function');
@@ -35,9 +38,11 @@
             var lname = $('#in-last').val();
             
             if ((cname || cname !== '') && (fname || fname !== '') && (lname || lname !== '')){
-                Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:true});
+            	//TODO: fields all filled in at a minimum, activate publisher submit button
+                
             } else {
-                Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:false});
+            	//TODO: fields not all filled in, deactivate publisher submit button 
+                
             }
             
         });
@@ -60,22 +65,15 @@
         DemoS1Controller.createRecords(acctObj,ctObj,function(result,event){
             console.log('in callback');
             $('#show-result').text('Created Account' + JSON.stringify(result) + JSON.stringify(event));
-            Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}}); 
+            
+            //TODO: make the submit happen and close the publisher
+            
             });
 
     }
     
-    Sfdc.canvas.publisher.subscribe({name: "publisher.post", onData:function(e) {
-        // This subscribe fires when the user hits 'Submit' in the publisher
-        doSave();
-    }}); 
-    
-    /** Currently investigating if there is a way to subscribe to the cancel event of publisher
-    * this does not work, but researching and asking around. 
-    Sfdc.canvas.publisher.subscribe({name: "publisher.cancel", onData:function(e) {
-        
-    }}); 
-    */
+    //TODO: subscribe the doSave() function to the submit button
+
     
     </script>
     

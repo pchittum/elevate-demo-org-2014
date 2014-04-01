@@ -11,27 +11,32 @@
 	
 	See DemoS1ActionPage to see examples of use of the publisher action. 
 	 -->
-<!-- 
+<!--For using onestarter, uncomment the below lines after adding static resources TouchSwipe and OneStarter from 
+	Josh Birks github repo. You can download from here: https://github.com/joshbirk/onestarter/tree/master/zips    
+	 
     <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'icons.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'styles.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.OneStarter,'OneStarter.css')}"/>
  -->    
     <!-- JavaScript files -->
-<!--     
-    <apex:includeScript value="{!URLFOR($Resource.jquery_1_10_2)}"/>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<!-- For using onestarter, uncomment the below lines after adding static resources TouchSwipe and OneStarter from 
+	Josh Birks github repo. You can download from here: https://github.com/joshbirk/onestarter/tree/master/zips  
+	  
     <apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/>
  -->
  	<!-- inserting jquery cdn link -->
- 	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
      
     <script>
 		
-	
+// If you are using onestarter for Salesforce1 look and feel, uncomment after adding static resources and 
+// uncommenting the stylyesheet and includScript lines above. 	
 //    $(document).ready(function() {
 //       	s1 = $('div#one-app').oneStarter('app');
 //    });
     
+    //Save Action. See TODOs below
     function doSave(){
         console.log('started save');
         var acctObj = 
@@ -45,28 +50,12 @@
             "LastName" : $('#in-last').val()
         }            
         console.log(JSON.stringify(acctObj)+JSON.stringify(ctObj));
-        DemoS1Controller.createRecords(acctObj,ctObj,function(result,event){
-            console.log('in callback');
-            $('#show-result').text('Created Account' + JSON.stringify(result) + JSON.stringify(event));
-            
-            if (event.status) {
-                //perform success actions here
-                //navigate to account record
-                if( (typeof sforce != 'undefined') && (sforce != null) ) {
-                    // Salesforce1 navigation
-                    sforce.one.navigateToSObject(result);
-                }
-                else {
-                    // Set the window's URL using a Visualforce expression
-                    window.location.href = '/' + result;
-                        //'curly-bangURLFOR(dollarAction.Account.View, account.Id)close-curly';
-                }
-            } else {
-                //perform failure actions here
-            
-            }
-            
-            });
+        
+/** TODO *****
+*
+Using the syntax needed, invoke the createRecords method of DemoS1Controller. 
+Make the callback update the show-result div with $('#show-result').text('Created Account: ' result);
+*/
 
     }
 
