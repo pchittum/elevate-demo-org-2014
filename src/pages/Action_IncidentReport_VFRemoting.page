@@ -1,0 +1,138 @@
+<apex:page docType="html-5.0" showHeader="false" standardController="Merchandise__c" extensions="IncidentReport">
+<apex:stylesheet value="{!URLFOR($Resource.OneStarter,'icons.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.OneStarter,'styles.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.OneStarter,'OneStarter.css')}"/>
+
+<!-- JavaScript files -->
+<apex:includeScript value="{!URLFOR($Resource.jquery_1_10_2)}"/>
+<apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/>
+<apex:includeScript value="/canvas/sdk/js/publisher.js"/>  
+<apex:includeScript value="{!$Resource.forcetk}"/>    
+  
+<script>
+    //this is implementation code
+    
+    var restClient = new forcetk.Client();
+    var contentId;
+    var merchId; 
+    restClient.setSessionToken('{!$Api.Session_ID}');
+    //turn off proxy now that we have our session for more efficient processing. 
+    restClient.proxyUrl = null; 
+    restClient.instanceUrl = '';
+    
+    $(document).ready(function() {
+        
+        //set to one starter record publisher action settings
+        s1 = $('div#one-app').oneStarter('record-action');
+        merchId = '{!Merchandise__c.id}';
+        $('#test-display').text('Action VF Loaded');
+        });
+
+    function handleIncident()
+    {
+        var dr = {
+            "Merchandise__c" : "{!Merchandise__c.Id}",
+            "Type__c" : "Accident",
+            "Description__c" : $('#ta-description').val()
+            };
+        console.log('button clicked');
+        IncidentReport.createIncidentReport(dr, function(resp,event){
+            console.log(resp);
+            $('#test-display').text('Damage Report Id: '+resp + JSON.stringify(event));
+            $('#do-photo').css("visibility","visible");
+	    	$('#loading-icon').show();
+        });
+    }
+    
+    function applyPic(fileInput)
+    {
+        console.log(fileInput);
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+        
+        reader.onload = (function(theFile) {
+                return function(e) {
+                    // Extract raw base64 data from data URL
+                    var imageData = e.target.result.split(',')[1];
+                    // Upload the image data to Chatter files
+                    $('#test-display').text('Creating File');
+                    restClient.create('ContentVersion', {
+                        "Origin": "H",
+                        "PathOnClient": file.name,
+                        "VersionData": imageData
+                    }, function(data) {
+                    	console.log('got to forceTK callback');
+                    	console.log(data.id); 
+                    	contentId = data.id; 
+                    	
+                    	Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:true});
+                    	
+                        $('#test-display').text('File Create Complete:' + data.id);
+      
+                    }, onErrorSfdc);
+                };
+            })(file);
+ 
+            reader.readAsDataURL(file);
+        
+    }
+    
+    function postToFeed(){
+    	$('#test-display').text('Posting To Feed: ' + contentId + '&' + merchId);
+    	
+    	Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.IncidentReport.postToChatter}', contentId, merchId,
+           function(result, event) {
+           		$('#test-display').text('Back from posting: ' +result + JSON.stringify(event));
+				Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}});  
+           });
+    	
+    }
+    
+    function invokeFileClick()
+    {
+        document.getElementById('in-photo').click(); 
+
+    }
+    function onErrorSfdc(error) {
+        console.log("onErrorSfdc: " + JSON.stringify(error));
+        alert('got an error' + JSON.stringify(error));
+    }
+ </script>   
+
+
+<div id="one-app">
+    <h1>Incident Report</h1>
+    <article class="padded">
+        Please file incident details and photo. &nbsp;
+        Merchandise: {!Merchandise__c.Name}
+    </article>
+            <div id="form-example">
+                <h2>Form Example</h2>
+                <!-- File input control - we hide this when the page inits -->
+                <!-- Photo upload button - we wire this to the file input control -->
+                <!--<button href="#" data-role="button" class="photoButton" data-theme="b">
+                    Upload Photo
+                </button>-->
+                <div id="test-display"></div>
+                <section>
+                    <label class="field-label">Description</label>
+                    <textarea id="ta-description" rows="4" columns="50" />
+                </section>
+                <button id="do-incident" onclick="javascript:handleIncident()">File Report</button>
+                <button style="visibility:hidden" id="do-photo" onclick="javascript:invokeFileClick()">Post Photo</button>
+                <input id="in-photo" style="visibility:hidden" onchange="javascript:applyPic(this)" class="photoFile" type="file" accept="image/*;capture=camera"/>
+
+            </div>
+
+
+</div>
+        <script type='text/javascript'>  
+            Sfdc.canvas.publisher.subscribe({name: "publisher.post", onData:function(e) {
+                // This subscribe fires when the user hits 'Submit' in the publisher
+                postToFeed();
+             }});                                           
+         </script>
+
+
+</apex:page>

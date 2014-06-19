@@ -10,95 +10,14 @@
 <apex:includeScript value="/canvas/sdk/js/publisher.js"/>  
 <apex:includeScript value="{!$Resource.forcetk}"/>    
 <!-- <c:RemoteTK />-->
-    
+<apex:remoteObjects >
+	<apex:remoteObjectModel id="wtfDoesThisDo" name="Damage_Report__c" fields="Id" jsShorthand="DamageReport">
+		<apex:remoteObjectField name="Merchandise__c" jsShorthand="merchId"/>
+		<apex:remoteObjectField name="Type__c" jsShorthand="type"/>			
+		<apex:remoteObjectField name="Description__c" jsShorthand="description"/>		
+	</apex:remoteObjectModel>
+</apex:remoteObjects>    
 <script>
-    //this is implementation code
-    
-    var restClient = new forcetk.Client();
-    var contentId;
-    var merchId; 
-    restClient.setSessionToken('{!$Api.Session_ID}');
-    //turn off proxy now that we have our session for more efficient processing. 
-    restClient.proxyUrl = null; 
-    restClient.instanceUrl = '';
-    
-    $(document).ready(function() {
-        
-        //set to one starter record publisher action settings
-        s1 = $('div#one-app').oneStarter('record-action');
-        merchId = '{!Merchandise__c.id}';
-        $('#test-display').text('Action VF Loaded');
-        });
-
-    function handleIncident()
-    {
-        var dr = {
-            "Merchandise__c" : "{!Merchandise__c.Id}",
-            "Type__c" : "Accident",
-            "Description__c" : $('#ta-description').val()
-            };
-        console.log('button clicked');
-        IncidentReport.createIncidentReport(dr, function(resp,event){
-            console.log(resp);
-            $('#test-display').text('Damage Report Id: '+resp + JSON.stringify(event));
-            $('#do-photo').css("visibility","visible");
-	    	$('#loading-icon').show();
-        });
-    }
-    
-    function applyPic(fileInput)
-    {
-        console.log(fileInput);
-        var file = fileInput.files[0];
-        var reader = new FileReader();
-        
-        reader.onload = (function(theFile) {
-                return function(e) {
-                    // Extract raw base64 data from data URL
-                    var imageData = e.target.result.split(',')[1];
-                    // Upload the image data to Chatter files
-                    $('#test-display').text('Creating File');
-                    restClient.create('ContentVersion', {
-                        "Origin": "H",
-                        "PathOnClient": file.name,
-                        "VersionData": imageData
-                    }, function(data) {
-                    	console.log('got to forceTK callback');
-                    	console.log(data.id); 
-                    	contentId = data.id; 
-                    	
-                    	Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:true});
-                    	
-                        $('#test-display').text('File Create Complete:' + data.id);
-      
-                    }, onErrorSfdc);
-                };
-            })(file);
- 
-            reader.readAsDataURL(file);
-        
-    }
-    
-    function postToFeed(){
-    	$('#test-display').text('Posting To Feed: ' + contentId + '&' + merchId);
-    	
-    	Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.IncidentReport.postToChatter}', contentId, merchId,
-           function(result, event) {
-           		$('#test-display').text('Back from posting: ' +result + JSON.stringify(event));
-				Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}});  
-           });
-    	
-    }
-    
-    function invokeFileClick()
-    {
-        document.getElementById('in-photo').click(); 
-
-    }
-    function onErrorSfdc(error) {
-        console.log("onErrorSfdc: " + JSON.stringify(error));
-        alert('got an error' + JSON.stringify(error));
-    }
  </script>   
 
 
@@ -128,12 +47,116 @@
 
 
 </div>
-        <script type='text/javascript'>  
-            Sfdc.canvas.publisher.subscribe({name: "publisher.post", onData:function(e) {
-                // This subscribe fires when the user hits 'Submit' in the publisher
-                postToFeed();
-             }});                                           
-         </script>
+    <script>  
+	    //this is implementation code
+	    
+	    var restClient = new forcetk.Client();
+	    var contentId;
+	    var merchId; 
+	    restClient.setSessionToken('{!$Api.Session_ID}');
+	    //turn off proxy now that we have our session for more efficient processing. 
+	    restClient.proxyUrl = null; 
+	    restClient.instanceUrl = '';
+	    
+	    $(document).ready(function() {
+	        
+	        //set to one starter record publisher action settings
+	        s1 = $('div#one-app').oneStarter('record-action');
+	        merchId = '{!Merchandise__c.id}';
+	        $('#test-display').text('Action VF Loaded');
+	        });
+	
+	    function handleIncident()
+	    {   
+	        var dr = new SObjectModel.DamageReport({
+	            "merchId" : "{!Merchandise__c.Id}",
+	            "type" : "Accident",
+	            "description" : $('#ta-description').val()
+	            });
+	        console.log('button clicked');
+	        
+	        dr.create(function(err, result, event){
+	        	if (err) {
+	        		console.log(err);
+		            $('#test-display').text('An error occurred creating the damage report: '+result[0] );
+	        	} else {
+	        		console.log(result);
+	        		console.log(event);
+		            $('#test-display').text('Damage Report Id: '+result[0] );
+		            $('#do-photo').css("visibility","visible");
+			    	$('#loading-icon').show();
+		    	}
+	        }); 
+	
+	        /* if using JS remoting APEX method
+	        IncidentReport.createIncidentReport(dr, function(resp,event){
+	            console.log(resp);
+	            $('#test-display').text('Damage Report Id: '+resp + JSON.stringify(event));
+	            $('#do-photo').css("visibility","visible");
+		    	$('#loading-icon').show();
+	        });
+	        */
+	    }
+	    
+	    function applyPic(fileInput)
+	    {
+	        console.log(fileInput);
+	        var file = fileInput.files[0];
+	        var reader = new FileReader();
+	        
+	        reader.onload = (function(theFile) {
+	                return function(e) {
+	                    // Extract raw base64 data from data URL
+	                    var imageData = e.target.result.split(',')[1];
+	                    // Upload the image data to Chatter files
+	                    $('#test-display').text('Creating File');
+	                    restClient.create('ContentVersion', {
+	                        "Origin": "H",
+	                        "PathOnClient": file.name,
+	                        "VersionData": imageData
+	                    }, function(data) {
+	                    	console.log('got to forceTK callback');
+	                    	console.log(data.id); 
+	                    	contentId = data.id; 
+	                    	
+	                    	Sfdc.canvas.publisher.publish({name: "publisher.setValidForSubmit", payload:true});
+	                    	
+	                        $('#test-display').text('File Create Complete:' + data.id);
+	      
+	                    }, onErrorSfdc);
+	                };
+	            })(file);
+	 
+	            reader.readAsDataURL(file);
+	        
+	    }
+	    
+	    function postToFeed(){
+	    	$('#test-display').text('Posting To Feed: ' + contentId + '&' + merchId);
+	    	
+	    	Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.IncidentReport.postToChatter}', contentId, merchId,
+	           function(result, event) {
+	           		$('#test-display').text('Back from posting: ' +result + JSON.stringify(event));
+					Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}});  
+	           });
+	    	
+	    }
+	    
+	    function invokeFileClick()
+	    {
+	        document.getElementById('in-photo').click(); 
+	
+	    }
+	    function onErrorSfdc(error) {
+	        console.log("onErrorSfdc: " + JSON.stringify(error));
+	        alert('got an error' + JSON.stringify(error));
+	    }
+
+        Sfdc.canvas.publisher.subscribe({name: "publisher.post", onData:function(e) {
+            // This subscribe fires when the user hits 'Submit' in the publisher
+            postToFeed();
+         }});                                           
+     </script>
 
 
 </apex:page>

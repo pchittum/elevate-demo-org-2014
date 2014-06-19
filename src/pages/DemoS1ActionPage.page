@@ -19,6 +19,8 @@
     <apex:includeScript value="{!URLFOR($Resource.jquery_1_10_2)}"/>
     <apex:includeScript value="{!URLFOR($Resource.TouchSwipe,'jquery.touchSwipe.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.OneStarter,'jquery.onestarter.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.OneStarter,'OneStarter.js')}"/>
+    
     <apex:includeScript value="/canvas/sdk/js/publisher.js"/>  
     <script>
     /*
@@ -45,6 +47,7 @@
     });
     
     function doSave(){
+    	setLoading(true);
         console.log('started save');
         var acctObj = 
         {
@@ -59,6 +62,7 @@
         console.log(JSON.stringify(acctObj)+JSON.stringify(ctObj));
         DemoS1Controller.createRecords(acctObj,ctObj,function(result,event){
             console.log('in callback');
+            setLoading(false);
             $('#show-result').text('Created Account' + JSON.stringify(result) + JSON.stringify(event));
             Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}}); 
             });
